@@ -32,7 +32,7 @@ def clean_data(df):
 
     for column in categories:
         categories[column] = categories[column].str[-1:]
-        categories[column] = pd.to_numeric(categories[column])
+        categories[column] = pd.to_numeric(categories[column]).apply(lambda x: 1 if x > 0 else 0)
 
     df.drop('categories', axis=1, inplace=True)
     df = pd.concat([df, categories], axis=1)
