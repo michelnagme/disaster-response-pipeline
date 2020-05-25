@@ -111,7 +111,7 @@ def evaluate_model(model, X_test, y_test, category_names):
         precision, recall, f_score, support = precision_recall_fscore_support(y_test[category],
                                                                               y_pred[:, i],
                                                                               average='weighted')
-        df = df.append({'category': category_names, 'f1-score': f_score, 'precision': precision, 'recall': recall},
+        df = df.append({'category': category, 'f1-score': f_score, 'precision': precision, 'recall': recall},
                        ignore_index=True)
 
     print(df)
