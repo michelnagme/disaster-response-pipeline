@@ -1,10 +1,9 @@
-import nltk
 import pickle
 import re
 import sys
 
+import nltk
 import pandas as pd
-
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from nltk.stem.wordnet import WordNetLemmatizer
