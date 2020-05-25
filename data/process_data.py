@@ -4,6 +4,14 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
+    """ Load messages from CSV files to a pandas DataFrame
+
+    :param str messages_filepath: path to the file containing the messages
+    :param str categories_filepath: path to the file containing the categories
+
+    :return: a pandas DataFrame with merged values
+    """
+
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
 
@@ -11,6 +19,13 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+    """ Clean the data by clearly naming columns, converting category values to binary and dropping duplicates
+
+    :param pandas.Dataframe df: DataFrame containing messages and their categories
+
+    :return: a pandas DataFrame with cleaned values
+    """
+
     categories = df['categories'].str.split(';', expand=True)
     category_colnames = categories.loc[0].apply(lambda x: x[:-2]).tolist()
     categories.columns = category_colnames
@@ -26,8 +41,14 @@ def clean_data(df):
     return df
 
 
-def save_data(df, database_filename):
-    engine = create_engine('sqlite:///'+database_filename)
+def save_data(df, database_filepath):
+    """ Save DataFrame data to a Data Base
+
+    :param pandas.DataFrame df: DataFrame containing messages and their categories
+    :param str database_filepath: path to Data Base file (SQLite)
+    """
+
+    engine = create_engine('sqlite:///' + database_filepath)
     df.to_sql('disaster_messages', engine, index=False)
 
 

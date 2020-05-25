@@ -1,23 +1,33 @@
-import sys, re, nltk, pickle
-nltk.download(['punkt', 'stopwords', 'wordnet'])
+import nltk
+import pickle
+import re
+import sys
 
 import pandas as pd
-
-from sqlalchemy import create_engine
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.stem.porter import PorterStemmer
-from sklearn.pipeline import Pipeline
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.pipeline import Pipeline
+from sqlalchemy import create_engine
+
+nltk.download(['punkt', 'stopwords', 'wordnet'])
 
 
 def load_data(database_filepath):
-    engine = create_engine('sqlite:///'+database_filepath)
+    """ Load DataBase data into pandas DataFrames
+
+    :param str database_filepath:
+
+    :return: a pandas DataFrame with messages (X), a pandas DataFrame with categories (y) and a list of categories
+             names (categories_names)
+    """
+
+    engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql_table('disaster_messages', engine)
 
     category_names = df.columns[4:]
@@ -29,15 +39,25 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
-    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    """ Tokenize the input text by using URL replacement, normalization, punctuation removal, tokenization,
+        lemmatization and stemming
+
+    :param str text: text to be tokenized
+
+    :return: list of str containing tokenized text
+    """
+
+    from nltk.corpus import stopwords
+
+    url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
     # Detect URLs
     detected_urls = re.findall(url_regex, text)
     for url in detected_urls:
         text = text.replace(url, 'urlplaceholder')
 
-    # case normalization, ponctuation removal and tokenization
-    words = word_tokenize(re.sub(r"[^a-zA-Z0-9]", " ", text.lower()))
+    # case normalization, punctuation removal and tokenization
+    words = word_tokenize(re.sub(r'[^a-zA-Z0-9]', " ", text.lower()))
 
     # removing stop words
     words = [w for w in words if w not in stopwords.words("english")]
@@ -52,6 +72,11 @@ def tokenize(text):
 
 
 def build_model():
+    """ Create a machine learning pipeline using GridSearch
+
+    :return: a sklearn.model_selection.GridSearchCV object
+    """
+
     # text processing and model pipeline
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
@@ -60,17 +85,24 @@ def build_model():
     ])
 
     # define parameters for GridSearchCV
-    parameters = {'clf__estimator__min_samples_leaf': [1, 2, 5],
-                  'clf__estimator__min_samples_split': [2, 5, 10],
-                  'clf__estimator__n_estimators': [10, 50, 100]}
+    parameters = {'clf__estimator__min_samples_leaf': [1, 5],
+                  'clf__estimator__min_samples_split': [2, 10]}
 
     # create gridsearch object
-    cv = GridSearchCV(pipeline, param_grid=parameters)
+    cv = GridSearchCV(pipeline, param_grid=parameters, n_jobs=-2)
 
     return cv
 
 
-def evaluate_model(model, X_test, y_test, category_names)
+def evaluate_model(model, X_test, y_test, category_names):
+    """ Prints a report with model's evaluation (f1 score, precision and recall)
+
+    :param sklearn.model_selection.GridSearchCV model: model to be evaluated
+    :param pandas.DataFrame X_test: DataFrame with test messages
+    :param pandas.DataFrame y_test: DataFrame with test categories
+    :param list category_names: list of categories names
+    """
+
     y_pred = model.predict(X_test)
     df = pd.DataFrame(columns=['category', 'f1-score', 'precision', 'recall'])
 
@@ -78,13 +110,19 @@ def evaluate_model(model, X_test, y_test, category_names)
         precision, recall, f_score, support = precision_recall_fscore_support(y_test[category],
                                                                               y_pred[:, i],
                                                                               average='weighted')
-        df = df.append({'category': col, 'f1-score': f_score, 'precision': precision, 'recall': recall},
+        df = df.append({'category': category_names, 'f1-score': f_score, 'precision': precision, 'recall': recall},
                        ignore_index=True)
 
     print(df)
 
 
 def save_model(model, model_filepath):
+    """ Save model to a pickle file
+
+    :param sklearn.model_selection.GridSearchCV model: model to be saved
+    :param str model_filepath: pickle file path
+    """
+
     with open(model_filepath, 'wb') as file:
         pickle.dump(model, file)
 
@@ -95,13 +133,13 @@ def main():
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y, category_names = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-        
+
         print('Building model...')
         model = build_model()
-        
+
         print('Training model...')
         model.fit(X_train, Y_train)
-        
+
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
 
@@ -111,9 +149,9 @@ def main():
         print('Trained model saved!')
 
     else:
-        print('Please provide the filepath of the disaster messages database '\
-              'as the first argument and the filepath of the pickle file to '\
-              'save the model to as the second argument. \n\nExample: python '\
+        print('Please provide the filepath of the disaster messages database '
+              'as the first argument and the filepath of the pickle file to '
+              'save the model to as the second argument. \n\nExample: python '
               'train_classifier.py ../data/DisasterResponse.db classifier.pkl')
 
 
