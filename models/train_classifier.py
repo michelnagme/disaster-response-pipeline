@@ -4,6 +4,8 @@ import re
 import sys
 
 import pandas as pd
+
+from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -30,10 +32,10 @@ def load_data(database_filepath):
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql_table('disaster_messages', engine)
 
-    category_names = df.columns[4:]
-
     X = df['message']
-    y = df[category_names]
+    y = df[df.columns[4:]]
+
+    category_names = y.columns
 
     return X, y, category_names
 
@@ -46,8 +48,6 @@ def tokenize(text):
 
     :return: list of str containing tokenized text
     """
-
-    from nltk.corpus import stopwords
 
     url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
@@ -86,10 +86,11 @@ def build_model():
 
     # define parameters for GridSearchCV
     parameters = {'clf__estimator__min_samples_leaf': [1, 5],
-                  'clf__estimator__min_samples_split': [2, 10]}
+                  'clf__estimator__min_samples_split': [2, 10],
+                  'clf__estimator__n_estimators': [10, 50]}
 
     # create gridsearch object
-    cv = GridSearchCV(pipeline, param_grid=parameters, n_jobs=-2)
+    cv = GridSearchCV(pipeline, param_grid=parameters)
 
     return cv
 

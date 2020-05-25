@@ -12,7 +12,6 @@ categories. The we app also display some visualizations of the data.
 this project. Both were kindly offered by [Figure Eight](https://www.figure-eight.com/).
 * `data/DisasterResponse.db` contains a SQLite DB with cleaned data from the original inputs.
 * `data/process_data.py` is the ETL pipeline script.
-* `models/classifier.pk` is the trained classifier used by the web app.
 * `models/train_classifier.py` is the ML pipeline script.
 
 ### Instructions:

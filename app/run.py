@@ -1,8 +1,10 @@
 import json
 import plotly
+import re
 import pandas as pd
 
 from nltk.stem import WordNetLemmatizer
+from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import word_tokenize
 
 from flask import Flask
@@ -13,6 +15,45 @@ from sqlalchemy import create_engine
 
 
 app = Flask(__name__)
+
+def tokenize(text):
+    """ Tokenize the input text by using URL replacement, normalization, punctuation removal, tokenization,
+        lemmatization and stemming
+
+    :param str text: text to be tokenized
+
+    :return: list of str containing tokenized text
+    """
+
+    from nltk.corpus import stopwords
+
+    url_regex = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+
+    # Detect URLs
+    detected_urls = re.findall(url_regex, text)
+    for url in detected_urls:
+        text = text.replace(url, 'urlplaceholder')
+
+    # case normalization, punctuation removal and tokenization
+    words = word_tokenize(re.sub(r'[^a-zA-Z0-9]', " ", text.lower()))
+
+    # removing stop words
+    words = [w for w in words if w not in stopwords.words("english")]
+
+    # lemmatization
+    lemmed = [WordNetLemmatizer().lemmatize(w, pos='v') for w in words]
+
+    # stemming
+    stemmed = [PorterStemmer().stem(w) for w in lemmed]
+
+    return stemmed
+
+# load data
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('disaster_messages', engine)
+
+# load model
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
