@@ -3,13 +3,13 @@
 In this project, a data set containing real messages that were sent during disaster events was used to create a machine
 learning pipeline to categorize the messages so that they could be sent to an appropriate disaster relief agency. The
 project includes a web app where an emergency worker could input a new message and get classification results in several
-categories. The we app also display some visualizations of the data.
+categories. The web app also displays some visualizations of the data.
 
 ### Files:
 
 * `app/run.py` is the script responsible for getting the web app up.
 * `data/disaster_categories.csv` and `data/disaster_messages.csv` contains the messages and categories used as input for
-this project. Both were kindly offered by [Figure Eight](https://www.figure-eight.com/).
+this project. Both were kindly provided by [Figure Eight](https://www.figure-eight.com/).
 * `data/DisasterResponse.db` contains a SQLite DB with cleaned data from the original inputs.
 * `data/process_data.py` is the ETL pipeline script.
 * `models/train_classifier.py` is the ML pipeline script.
