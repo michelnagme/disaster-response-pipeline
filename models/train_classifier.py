@@ -40,8 +40,8 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
-    """ Tokenize the input text by using URL replacement, normalization, punctuation removal, tokenization,
-        lemmatization and stemming
+    """ Tokenize the input text by using URL replacement, normalization, punctuation removal, tokenization and
+        lemmatization
 
     :param str text: text to be tokenized
 
@@ -62,12 +62,9 @@ def tokenize(text):
     words = [w for w in words if w not in stopwords.words("english")]
 
     # lemmatization
-    lemmed = [WordNetLemmatizer().lemmatize(w, pos='v') for w in words]
+    lemmed = [WordNetLemmatizer().lemmatize(w).strip() for w in words]
 
-    # stemming
-    stemmed = [PorterStemmer().stem(w) for w in lemmed]
-
-    return stemmed
+    return lemmed
 
 
 def build_model():
